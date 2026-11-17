@@ -1,1 +1,100 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07080a"><title>Focus</title>
+<style>
+:root{--bg:#07080a;--s:#101216;--l:#1c2026;--a:#c6ff3d;--a2:#3dffb5;--t:#eef1f4;--m:#6b7480}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--t);font-family:ui-sans-serif,system-ui,sans-serif;min-height:100vh;padding:calc(env(safe-area-inset-top) + 8px) 0 96px;background-image:radial-gradient(#1a1e24 1px,transparent 1px);background-size:22px 22px}
+.mono{font-family:ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;font-size:11px;color:var(--m)}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 22px}header b{font-size:15px;letter-spacing:.3em}
+header span{display:flex;gap:6px;align-items:center;color:var(--a)}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tab{display:none;padding:0 18px}.tab.on{display:block}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 14px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--l);background:transparent;color:var(--m);padding:9px 16px;border-radius:99px;font-size:13px}
+.chip.on{border-color:var(--a);color:var(--a);box-shadow:0 0 14px #c6ff3d22 inset}
+.dial{position:relative;width:min(84vw,340px);margin:6px auto}.dial svg{width:100%;display:block}
+.dial .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#clock{font-size:clamp(46px,16vw,68px);font-weight:200;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+#arc{transition:stroke-dashoffset 1s linear;filter:drop-shadow(0 0 7px #c6ff3d99)}
+.ctl{display:flex;justify-content:center;align-items:center;gap:22px;margin:22px 0 8px}
+.rb{width:52px;height:52px;border-radius:50%;border:1px solid var(--l);background:var(--s);color:var(--t);display:grid;place-items:center}
+.rb.on{color:var(--a);border-color:var(--a)}
+.go{width:78px;height:78px;border-radius:50%;border:0;background:var(--a);color:#000;display:grid;place-items:center;box-shadow:0 0 34px #c6ff3d55}.go svg{width:30px;height:30px;fill:#000}
+.panel{background:var(--s);border:1px solid var(--l);border-radius:18px;padding:16px;margin:12px 0}
+.kpi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.kpi div{background:var(--s);border:1px solid var(--l);border-radius:16px;padding:14px}
+.kpi b{display:block;font-size:24px;font-weight:300;margin-top:6px}
+.prog{height:3px;background:var(--l);margin-top:10px;border-radius:2px;overflow:hidden}.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--a2))}
+input{background:var(--bg);border:1px solid var(--l);color:var(--t);border-radius:12px;padding:12px;font-size:15px;width:100%;outline:0}input:focus{border-color:var(--a)}
+.row{display:flex;gap:8px}.row .rb{border-radius:12px;flex:none}
+ul{list-style:none;padding:0;margin:8px 0 0}li{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--l);font-size:14px}li:last-child{border:0}li button{background:none;border:0;color:var(--m);padding:4px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:120px}.bars div{flex:1;text-align:center}.bars i{display:block;background:linear-gradient(var(--a),#c6ff3d11);border-radius:5px 5px 0 0;min-height:3px}
+h3{margin:4px 0 8px;font-weight:300;font-size:22px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#07080aee;backdrop-filter:blur(14px);border-top:1px solid var(--l);padding:10px 0 calc(env(safe-area-inset-bottom) + 10px)}
+nav button{background:none;border:0;color:var(--m);display:flex;flex-direction:column;align-items:center;gap:5px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:4px 22px}nav .on{color:var(--a)}
+</style></head><body>
+<header><b>FOCUS</b><span><svg class="i" data-i="flame"></svg><b id="streak" style="letter-spacing:0">0</b></span></header>
 
+<section id="timer" class="tab on">
+<div class="chips" id="subj"></div>
+<div class="chips" id="modes"></div>
+<div class="row" id="custw" style="display:none;margin-bottom:10px"><input id="cust" type="number" placeholder="Minutes"></div>
+<div class="dial"><svg viewBox="0 0 300 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c6ff3d"/><stop offset="1" stop-color="#3dffb5"/></linearGradient></defs>
+<g id="ticks"></g><circle cx="150" cy="150" r="118" fill="none" stroke="#1c2026" stroke-width="3"/>
+<circle id="arc" cx="150" cy="150" r="118" fill="none" stroke="url(#g)" stroke-width="5" stroke-linecap="round" stroke-dasharray="741.4" stroke-dashoffset="741.4" transform="rotate(-90 150 150)"/></svg>
+<div class="c"><div class="mono" id="state">Ready</div><div id="clock">25:00</div><div class="mono" id="subl"></div></div></div>
+<div class="ctl"><button class="rb" id="rst"><svg class="i" data-i="reset"></svg></button><button class="go" id="go"><svg class="i" id="goi" data-i="play"></svg></button><button class="rb" id="strict"><svg class="i" data-i="shield"></svg></button></div>
+<div class="mono" style="text-align:center">Shield · alerts if you leave the app</div>
+<div class="panel" style="margin-top:22px"><div style="display:flex;justify-content:space-between"><span class="mono">Daily goal</span><span><b id="today">0</b><span class="mono"> / </span><input id="goal" type="number" style="width:64px;padding:4px 8px;display:inline-block"><span class="mono"> min</span></span></div><div class="prog"><i id="gp" style="width:0"></i></div></div>
+</section>
+
+<section id="stats" class="tab"><h3>Stats</h3>
+<div class="kpi"><div><span class="mono">Today</span><b id="k1">0</b></div><div><span class="mono">Week</span><b id="k2">0</b></div><div><span class="mono">Total</span><b id="k3">0</b></div></div>
+<div class="panel"><div class="bars" id="chart"></div></div>
+<div class="panel"><span class="mono">By subject</span><ul id="bysub"></ul></div>
+<div class="panel"><span class="mono">Recent</span><ul id="log"></ul><div class="row" style="margin-top:12px"><button class="chip" id="exp" style="flex:1"><svg class="i" data-i="dl" style="vertical-align:-5px"></svg> Export</button><button class="chip" id="clr" style="flex:1"><svg class="i" data-i="trash" style="vertical-align:-5px"></svg> Clear</button></div></div></section>
+
+<section id="plan" class="tab"><h3>Plan</h3>
+<div class="panel"><span class="mono">Subjects</span><div class="row" style="margin-top:10px"><input id="ns" placeholder="New subject"><button class="rb" id="adds"><svg class="i" data-i="plus"></svg></button></div><ul id="sl"></ul></div>
+<div class="panel"><span class="mono">Tasks</span><div class="row" style="margin-top:10px"><input id="nt" placeholder="New task"><button class="rb" id="addt"><svg class="i" data-i="plus"></svg></button></div><ul id="tl"></ul></div></section>
+
+<nav><button data-t="timer" class="on"><svg class="i" data-i="timer"></svg>Focus</button><button data-t="stats"><svg class="i" data-i="chart"></svg>Stats</button><button data-t="plan"><svg class="i" data-i="book"></svg>Plan</button></nav>
+<script>
+const P={play:'<polygon points="6 3 20 12 6 21 6 3"/>',stop:'<rect width="14" height="14" x="5" y="5" rx="2"/>',reset:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',timer:'<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',chart:'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',book:'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',check:'<path d="M20 6 9 17l-5-5"/>'};
+const $=i=>document.getElementById(i),L=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},S=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+function icons(){document.querySelectorAll('svg[data-i]').forEach(s=>{s.innerHTML=P[s.dataset.i]})}
+const MODES=[['Pomodoro','25,5'],['Deep','50,10'],['Flow','90,15'],['Stopwatch','0,0'],['Custom','c']];
+let subs=L('subs',['Study','Reading','Work']),tasks=L('tasks',[]),logs=L('logs',[]),cur=L('cur',0),mi=0,run=false,brk=false,left=1500,total=1500,up=0,tick=null,sw=false,shield=false;
+const C=741.4,day=t=>new Date(t).toDateString();
+$('ticks').innerHTML=[...Array(60)].map((_,i)=>{const a=i*6*Math.PI/180,r1=i%5?136:130,r2=144;return`<line x1="${150+r1*Math.sin(a)}" y1="${150-r1*Math.cos(a)}" x2="${150+r2*Math.sin(a)}" y2="${150-r2*Math.cos(a)}" stroke="${i%5?'#1c2026':'#3a424c'}" stroke-width="${i%5?1:2}"/>`}).join('');
+function beep(){try{const a=new AudioContext(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=660;g.gain.value=.15;o.start();setTimeout(()=>o.stop(),450)}catch(e){}navigator.vibrate&&navigator.vibrate([250,100,250])}
+const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+function cfg(){const m=MODES[mi][1];$('custw').style.display=m=='c'?'flex':'none';if(m=='c')return[+$('cust').value||25,5];return m.split(',').map(Number)}
+function setup(){const[f]=cfg();sw=f==0;total=left=f*60;up=0;brk=false;draw()}
+function draw(){$('clock').textContent=fmt(sw?up:left);const p=sw?(up%3600)/3600:1-left/total;$('arc').style.strokeDashoffset=C*(1-p);
+$('state').textContent=brk?'Break':run?'Focus':'Ready';$('subl').textContent=subs[cur]||'';$('goi').dataset.i=run?'stop':'play';icons()}
+function save(sec){if(sec<30)return;logs.unshift({t:Date.now(),s:subs[cur]||'General',m:Math.round(sec/60)});S('logs',logs);stats()}
+function end(){clearInterval(tick);beep();if(!brk){save(total);const b=cfg()[1];if(b){brk=true;total=left=b*60;tick=setInterval(step,1000);draw();return}}run=false;setup()}
+function step(){if(sw)up++;else if(--left<=0)return end();draw()}
+$('go').onclick=()=>{if(run){clearInterval(tick);run=false;if(!brk)save(sw?up:total-left);setup();return}run=true;tick=setInterval(step,1000);draw()};
+$('rst').onclick=()=>{clearInterval(tick);run=false;setup()};$('cust').oninput=setup;
+$('strict').onclick=()=>{shield=!shield;$('strict').classList.toggle('on',shield)};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&run&&!brk&&shield)setTimeout(()=>{if(document.hidden)beep()},5000)});
+function chips(){$('subj').innerHTML=subs.map((s,i)=>`<button class="chip ${i==cur?'on':''}" onclick="cur=${i};S('cur',cur);chips();draw()">${s}</button>`).join('');
+$('modes').innerHTML=MODES.map((m,i)=>`<button class="chip ${i==mi?'on':''}" onclick="if(!run){mi=${i};chips();setup()}">${m[0]}</button>`).join('')}
+function stats(){const sum=f=>logs.filter(f).reduce((a,l)=>a+l.m,0),now=Date.now(),td=sum(l=>day(l.t)==day(now)),wk=sum(l=>now-l.t<6048e5);
+$('today').textContent=td;$('k1').textContent=td+'m';$('k2').textContent=wk+'m';$('k3').textContent=sum(()=>1)+'m';
+const g=+$('goal').value||120;$('gp').style.width=Math.min(100,td/g*100)+'%';
+let st=0,d=new Date();while(logs.some(l=>day(l.t)==day(d))){st++;d.setDate(d.getDate()-1)}$('streak').textContent=st;
+const days=[...Array(7)].map((_,i)=>{const x=new Date();x.setDate(x.getDate()-6+i);return[x.toLocaleDateString(undefined,{weekday:'narrow'}),sum(l=>day(l.t)==day(x))]}),mx=Math.max(...days.map(d=>d[1]),1);
+$('chart').innerHTML=days.map(d=>`<div><i style="height:${d[1]/mx*90}px"></i><span class="mono">${d[0]}</span></div>`).join('');
+const by={};logs.forEach(l=>by[l.s]=(by[l.s]||0)+l.m);$('bysub').innerHTML=Object.entries(by).map(([k,v])=>`<li>${k}<span class="mono">${v} min</span></li>`).join('')||'<li class="mono">No data</li>';
+$('log').innerHTML=logs.slice(0,12).map(l=>`<li>${l.s}<span class="mono">${new Date(l.t).toLocaleDateString()} · ${l.m}m</span></li>`).join('')||'<li class="mono">No sessions</li>'}
+function plan(){$('sl').innerHTML=subs.map((s,i)=>`<li>${s}<button onclick="subs.splice(${i},1);cur=0;S('subs',subs);plan();chips();draw()"><svg class="i" data-i="x"></svg></button></li>`).join('');
+$('tl').innerHTML=tasks.map((t,i)=>`<li><span onclick="tasks[${i}].d=!tasks[${i}].d;S('tasks',tasks);plan()" style="${t.d?'color:var(--m);text-decoration:line-through':''}">${t.n}</span><button onclick="tasks.splice(${i},1);S('tasks',tasks);plan()"><svg class="i" data-i="x"></svg></button></li>`).join('');icons()}
+$('adds').onclick=()=>{const v=$('ns').value.trim();if(v){subs.push(v);S('subs',subs);$('ns').value='';plan();chips()}};
+$('addt').onclick=()=>{const v=$('nt').value.trim();if(v){tasks.push({n:v});S('tasks',tasks);$('nt').value='';plan()}};
+$('goal').value=L('goal',120);$('goal').onchange=()=>{S('goal',+$('goal').value);stats()};
+$('exp').onclick=()=>{const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(logs));a.download='focus-sessions.json';a.click()};
+$('clr').onclick=()=>{if(confirm('Delete all sessions?')){logs=[];S('logs',logs);stats()}};
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,nav button').forEach(x=>x.classList.remove('on'));$(b.dataset.t).classList.add('on');b.classList.add('on')});
+chips();plan();setup();stats();icons();
+</script></body></html>
